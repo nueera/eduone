@@ -1,0 +1,168 @@
+# ============================================================================
+# CollegeOS — Docker Compose
+# Full-stack orchestration: PostgreSQL, Redis, FastAPI, Next.js, Celery, Nginx
+# ============================================================================
+
+version: "3.9"
+
+services:
+  # ─── PostgreSQL Database ────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: collegeos-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-collegeos}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-collegeos}
+      POSTGRES_DB: ${DB_NAME:-collegeos}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-collegeos}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - collegeos-network
+
+  # ─── Redis Cache ───────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: collegeos-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - collegeos-network
+
+  # ─── FastAPI Backend ───────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: collegeos-backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-collegeos}:${DB_PASSWORD:-collegeos}@db:5432/${DB_NAME:-collegeos}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - JWT_SECRET=${JWT_SECRET:-change-me-to-a-secure-random-string}
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRATION_MINUTES=${JWT_EXPIRATION_MINUTES:-60}
+      - BACKEND_CORS_ORIGINS=http://localhost:3000,http://localhost,http://localhost:80
+      - AUTH_DISABLED=${AUTH_DISABLED:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - collegeos-network
+
+  # ─── Celery Worker (Background Tasks) ─────────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: collegeos-worker
+    command: celery -A app.worker worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-collegeos}:${DB_PASSWORD:-collegeos}@db:5432/${DB_NAME:-collegeos}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - JWT_SECRET=${JWT_SECRET:-change-me-to-a-secure-random-string}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+    networks:
+      - collegeos-network
+
+  # ─── Next.js Frontend ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: collegeos-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
+      - NEXTAUTH_URL=http://localhost
+      - NEXTAUTH_SECRET=${JWT_SECRET:-change-me-to-a-secure-random-string}
+      - NEXT_PUBLIC_AUTH_DISABLED=${AUTH_DISABLED:-true}
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - /app/node_modules
+      - /app/.next
+    restart: unless-stopped
+    networks:
+      - collegeos-network
+
+  # ─── Nginx Reverse Proxy ──────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: collegeos-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - collegeos-network
+
+# ─── Volumes ──────────────────────────────────────────────────────────────
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+
+# ─── Network ──────────────────────────────────────────────────────────────
+networks:
+  collegeos-network:
+    driver: bridge
