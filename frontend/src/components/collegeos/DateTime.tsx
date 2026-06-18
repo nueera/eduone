@@ -1,12 +1,10 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useTheme } from 'next-themes';
 
 export default function DateTime() {
   const timeRef = useRef<HTMLSpanElement>(null);
   const dateRef = useRef<HTMLSpanElement>(null);
-  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     const update = () => {
@@ -36,18 +34,12 @@ export default function DateTime() {
     <div className="text-center select-none">
       <span
         ref={timeRef}
-        className="text-5xl sm:text-6xl font-light tracking-tight"
-        style={{
-          color: resolvedTheme === 'dark' ? 'oklch(0.95 0 0)' : 'oklch(0.15 0 0)',
-        }}
+        className="text-5xl sm:text-6xl font-light tracking-tight text-foreground"
       />
       <br />
       <span
         ref={dateRef}
-        className="text-sm sm:text-base font-medium opacity-60"
-        style={{
-          color: resolvedTheme === 'dark' ? 'oklch(0.8 0 0)' : 'oklch(0.4 0 0)',
-        }}
+        className="text-sm sm:text-base font-medium text-muted-foreground"
       />
     </div>
   );

@@ -11,7 +11,7 @@ WORKDIR /app
 FROM base AS deps
 
 COPY package.json package-lock.json* ./
-RUN npm ci || npm install
+RUN npm install
 
 # ─── Builder ─────────────────────────────────────────────────────────────────
 FROM base AS builder
@@ -27,7 +27,7 @@ RUN npm run build 2>/dev/null || true
 FROM base AS development
 
 COPY package.json package-lock.json* ./
-RUN npm ci || npm install
+RUN npm install
 
 COPY . .
 
