@@ -1,14 +1,29 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, ClipboardList, GraduationCap, ArrowUpRight } from 'lucide-react';
+import { Users, ClipboardList, GraduationCap, TrendingUp, ArrowRight } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { StatCard } from '@/components/ui/stat-card';
+import { Panel } from '@/components/ui/panel';
+import { ChartTooltip, chartGridProps, chartAxisProps, chartActiveDot, chartGradient } from '@/components/ui/chart-tooltip';
 
-const stats = [
-  { label: 'New Leads', value: '142', change: '+12%', icon: Users, color: '#F97316' },
-  { label: 'Applications', value: '89', change: '+8%', icon: ClipboardList, color: '#FB923C' },
-  { label: 'Enrolled', value: '67', change: '+15%', icon: GraduationCap, color: '#FDBA74' },
-  { label: 'Conversion Rate', value: '63%', change: '+5%', icon: TrendingUp, color: '#F97316' },
+const MODULE_COLOR = '#F97316';
+
+// Hero stat — gets the spotlight + sparkline + display serif treatment
+const heroStat = {
+  label: 'Conversion Rate',
+  value: '63',
+  unit: '%',
+  icon: TrendingUp,
+  delta: 5.2,
+  deltaLabel: 'vs last month',
+  trend: [42, 45, 48, 52, 55, 58, 60, 63],
+};
+
+const secondaryStats = [
+  { label: 'New Leads', value: '142', icon: Users, delta: 12, trend: [65, 78, 90, 110, 130, 142] },
+  { label: 'Applications', value: '89', icon: ClipboardList, delta: 8, trend: [40, 52, 60, 75, 85, 89] },
+  { label: 'Enrolled', value: '67', icon: GraduationCap, delta: 15, trend: [25, 35, 42, 55, 63, 67] },
 ];
 
 const enrollmentData = [
@@ -38,115 +53,137 @@ const statusColors: Record<string, string> = {
 
 export default function AdmissionDashboard() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, i) => {
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 noise-overlay">
+      {/* Premium asymmetric stat grid — 1 hero + 3 secondary */}
+      <div className="grid grid-cols-12 gap-4">
+        <StatCard
+          size="hero"
+          className="col-span-12 lg:col-span-6"
+          label={heroStat.label}
+          value={heroStat.value}
+          unit={heroStat.unit}
+          icon={heroStat.icon}
+          accentColor={MODULE_COLOR}
+          delta={heroStat.delta}
+          deltaLabel={heroStat.deltaLabel}
+          trend={heroStat.trend}
+          index={0}
+          gridColumns={12}
+        />
+        {secondaryStats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <motion.div
+            <StatCard
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="glass rounded-xl p-4 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: `${stat.color}18` }}
-                >
-                  <Icon className="w-4 h-4" style={{ color: stat.color }} />
-                </div>
-                <span className="text-xs font-medium text-green-500 flex items-center gap-0.5">
-                  <ArrowUpRight className="w-3 h-3" />
-                  {stat.change}
-                </span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
-            </motion.div>
+              size="md"
+              className="col-span-12 sm:col-span-6 lg:col-span-2"
+              label={stat.label}
+              value={stat.value}
+              icon={Icon}
+              accentColor={MODULE_COLOR}
+              delta={stat.delta}
+              trend={stat.trend}
+              index={i + 1}
+              gridColumns={12}
+            />
           );
         })}
       </div>
 
-      {/* Chart + Table row */}
+      {/* Chart + Recent Leads */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Enrollment Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="lg:col-span-3 glass rounded-xl p-4"
+        <Panel
+          className="lg:col-span-3"
+          title="Enrollment Funnel"
+          description="Leads → Applications → Enrolled over the last 6 months"
+          accentColor={MODULE_COLOR}
+          index={0}
+          gridColumns={2}
+          bodyClassName="pt-2"
         >
-          <h3 className="text-sm font-semibold text-foreground mb-4">Enrollment Funnel</h3>
-          <div className="h-64">
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={enrollmentData}>
+              <AreaChart data={enrollmentData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
                 <defs>
-                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F97316" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#F97316" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorApps" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#FB923C" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#FB923C" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorEnrolled" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#FDBA74" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#FDBA74" stopOpacity={0} />
-                  </linearGradient>
+                  {chartGradient('colorLeads', '#F97316')}
+                  {chartGradient('colorApps', '#FB923C')}
+                  {chartGradient('colorEnrolled', '#FDBA74')}
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <YAxis tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--popover)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                    fontSize: 12,
-                  }}
+                <CartesianGrid {...chartGridProps} />
+                <XAxis dataKey="month" {...chartAxisProps} />
+                <YAxis {...chartAxisProps} />
+                <Tooltip content={<ChartTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="leads"
+                  stroke="#F97316"
+                  fill="url(#colorLeads)"
+                  strokeWidth={2}
+                  activeDot={chartActiveDot}
                 />
-                <Area type="monotone" dataKey="leads" stroke="#F97316" fill="url(#colorLeads)" strokeWidth={2} />
-                <Area type="monotone" dataKey="applications" stroke="#FB923C" fill="url(#colorApps)" strokeWidth={2} />
-                <Area type="monotone" dataKey="enrolled" stroke="#FDBA74" fill="url(#colorEnrolled)" strokeWidth={2} />
+                <Area
+                  type="monotone"
+                  dataKey="applications"
+                  stroke="#FB923C"
+                  fill="url(#colorApps)"
+                  strokeWidth={2}
+                  activeDot={chartActiveDot}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="enrolled"
+                  stroke="#FDBA74"
+                  fill="url(#colorEnrolled)"
+                  strokeWidth={2}
+                  activeDot={chartActiveDot}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </Panel>
 
-        {/* Recent Leads */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="lg:col-span-2 glass rounded-xl p-4"
+        <Panel
+          className="lg:col-span-2"
+          title="Recent Leads"
+          description="Latest 5 inbound leads"
+          accentColor={MODULE_COLOR}
+          actions={
+            <button className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-0.5 num-tabular">
+              View all <ArrowRight className="w-3 h-3" />
+            </button>
+          }
+          index={1}
+          gridColumns={2}
+          bodyClassName="pt-2"
         >
-          <h3 className="text-sm font-semibold text-foreground mb-4">Recent Leads</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-1">
             {recentLeads.map((lead) => (
-              <div key={lead.name} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{lead.name}</p>
-                  <p className="text-xs text-muted-foreground">{lead.course}</p>
+              <div
+                key={lead.name}
+                className="flex items-center justify-between py-2.5 px-2 -mx-2 rounded-lg hover:bg-accent/50 transition-colors"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{lead.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{lead.course}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                    className="text-[10px] px-2 py-0.5 rounded-md font-medium num-tabular"
                     style={{
-                      backgroundColor: `${statusColors[lead.status]}18`,
+                      backgroundColor: `color-mix(in oklch, ${statusColors[lead.status]} 14%, transparent)`,
                       color: statusColors[lead.status],
                     }}
                   >
                     {lead.status}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">{lead.date}</span>
+                  <span className="text-[10px] text-muted-foreground num-tabular w-16 text-right">
+                    {lead.date}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
-        </motion.div>
+        </Panel>
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ venv/
 ENV/
 
 # Next.js
-/.next/
+.next/
 /out/
 
 # Production

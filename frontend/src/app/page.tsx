@@ -34,7 +34,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative">
+    <div className="min-h-screen flex flex-col relative noise-overlay">
       <Background />
 
       {/* Top bar */}
@@ -49,8 +49,8 @@ export default function Home() {
             <span className="text-lg font-bold text-primary">C</span>
           </div>
           <div>
-            <h1 className="text-base font-semibold text-foreground tracking-tight">CollegeOS</h1>
-            <p className="text-[10px] text-muted-foreground">Campus Management Platform</p>
+            <h1 className="text-lg font-semibold text-foreground tracking-tight font-display">CollegeOS</h1>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Campus Management Platform</p>
           </div>
         </motion.div>
 
@@ -108,7 +108,7 @@ export default function Home() {
                 className="w-1.5 h-1.5 rounded-full animate-pulse"
                 style={{ backgroundColor: item.color }}
               />
-              {item.label}
+              <span className="num-tabular">{item.label}</span>
             </div>
           ))}
         </motion.div>

@@ -1,14 +1,27 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { FileCheck, Calendar, Award, TrendingUp, ArrowUpRight } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { FileCheck, Calendar, Award, TrendingUp, Clock, Users, ArrowRight } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { StatCard } from '@/components/ui/stat-card';
+import { Panel } from '@/components/ui/panel';
+import { ChartTooltip, chartGridProps, chartAxisProps, chartActiveDot } from '@/components/ui/chart-tooltip';
 
-const stats = [
-  { label: 'Upcoming Exams', value: '12', change: '3 this week', icon: Calendar, color: '#A855F7' },
-  { label: 'Results Published', value: '8', change: '+2', icon: Award, color: '#C084FC' },
-  { label: 'Avg Score', value: '76%', change: '+4%', icon: TrendingUp, color: '#D8B4FE' },
-  { label: 'Total Exams', value: '156', change: '+12', icon: FileCheck, color: '#A855F7' },
+const MODULE_COLOR = '#A855F7';
+
+const heroStat = {
+  label: 'Average Score',
+  value: '76',
+  unit: '%',
+  icon: TrendingUp,
+  delta: 5.5,
+  deltaLabel: 'vs last semester',
+  trend: [62, 65, 68, 70, 72, 74, 76],
+};
+
+const secondaryStats = [
+  { label: 'Upcoming Exams', value: '12', icon: Calendar, delta: 0, trend: [8, 9, 10, 11, 12, 12] },
+  { label: 'Results Published', value: '8', icon: Award, delta: 33, trend: [3, 4, 5, 6, 7, 8] },
+  { label: 'Total Exams', value: '156', icon: FileCheck, delta: 8, trend: [120, 130, 138, 145, 150, 156] },
 ];
 
 const passRateData = [
@@ -21,11 +34,11 @@ const passRateData = [
 ];
 
 const subjectPerformance = [
-  { subject: 'Data Structures', avg: 72, highest: 95, lowest: 28 },
-  { subject: 'DBMS', avg: 78, highest: 92, lowest: 35 },
-  { subject: 'OS', avg: 68, highest: 88, lowest: 22 },
-  { subject: 'Networks', avg: 74, highest: 91, lowest: 30 },
-  { subject: 'ML', avg: 81, highest: 97, lowest: 40 },
+  { subject: 'Data Structures', avg: 72 },
+  { subject: 'DBMS', avg: 78 },
+  { subject: 'OS', avg: 68 },
+  { subject: 'Networks', avg: 74 },
+  { subject: 'ML', avg: 81 },
 ];
 
 const upcomingExams = [
@@ -37,87 +50,145 @@ const upcomingExams = [
 
 export default function ExaminationDashboard() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="glass rounded-xl p-4 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}18` }}>
-                  <Icon className="w-4 h-4" style={{ color: stat.color }} />
-                </div>
-                <span className="text-xs font-medium text-green-500 flex items-center gap-0.5">
-                  <ArrowUpRight className="w-3 h-3" />{stat.change}
-                </span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
-            </motion.div>
-          );
-        })}
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 noise-overlay">
+      {/* Asymmetric stat grid */}
+      <div className="grid grid-cols-12 gap-4">
+        <StatCard
+          size="hero"
+          className="col-span-12 lg:col-span-6"
+          label={heroStat.label}
+          value={heroStat.value}
+          unit={heroStat.unit}
+          icon={heroStat.icon}
+          accentColor={MODULE_COLOR}
+          delta={heroStat.delta}
+          deltaLabel={heroStat.deltaLabel}
+          trend={heroStat.trend}
+          index={0}
+          gridColumns={12}
+        />
+        {secondaryStats.map((stat, i) => (
+          <StatCard
+            key={stat.label}
+            size="md"
+            className="col-span-12 sm:col-span-6 lg:col-span-2"
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+            accentColor={MODULE_COLOR}
+            delta={stat.delta}
+            trend={stat.trend}
+            index={i + 1}
+            gridColumns={12}
+          />
+        ))}
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-3 glass rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-foreground mb-4">Semester Pass Rate Trend</h3>
-          <div className="h-64">
+        <Panel
+          className="lg:col-span-3"
+          title="Semester Pass Rate Trend"
+          description="Pass rate & distinction % across 6 semesters"
+          accentColor={MODULE_COLOR}
+          index={0}
+          gridColumns={2}
+          bodyClassName="pt-2"
+        >
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={passRateData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="semester" tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <YAxis tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <Tooltip contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: 12 }} />
-                <Line type="monotone" dataKey="passRate" stroke="#A855F7" strokeWidth={2} dot={{ fill: '#A855F7', r: 4 }} />
-                <Line type="monotone" dataKey="distinction" stroke="#D8B4FE" strokeWidth={2} dot={{ fill: '#D8B4FE', r: 4 }} />
+              <LineChart data={passRateData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+                <CartesianGrid {...chartGridProps} />
+                <XAxis dataKey="semester" {...chartAxisProps} />
+                <YAxis {...chartAxisProps} domain={[0, 100]} />
+                <Tooltip content={<ChartTooltip suffix="%" />} />
+                <Line
+                  type="monotone"
+                  dataKey="passRate"
+                  name="Pass Rate"
+                  stroke="#A855F7"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={chartActiveDot}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="distinction"
+                  name="Distinction"
+                  stroke="#D8B4FE"
+                  strokeWidth={2}
+                  strokeDasharray="4 3"
+                  dot={false}
+                  activeDot={chartActiveDot}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </Panel>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2 glass rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-foreground mb-4">Subject Averages</h3>
-          <div className="h-64">
+        <Panel
+          className="lg:col-span-2"
+          title="Subject Averages"
+          description="Average score by subject"
+          accentColor={MODULE_COLOR}
+          index={1}
+          gridColumns={2}
+          bodyClassName="pt-2"
+        >
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={subjectPerformance} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis type="number" tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <YAxis dataKey="subject" type="category" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" width={90} />
-                <Tooltip contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: 12 }} />
-                <Bar dataKey="avg" fill="#A855F7" radius={[0, 4, 4, 0]} />
+              <BarChart data={subjectPerformance} layout="vertical" margin={{ top: 8, right: 16, bottom: 0, left: 16 }}>
+                <CartesianGrid {...chartGridProps} horizontal={false} vertical={true} />
+                <XAxis type="number" {...chartAxisProps} domain={[0, 100]} />
+                <YAxis dataKey="subject" type="category" {...chartAxisProps} width={88} />
+                <Tooltip content={<ChartTooltip suffix="%" />} cursor={{ fill: 'var(--accent)', opacity: 0.3 }} />
+                <Bar dataKey="avg" name="Average" fill="#A855F7" radius={[0, 6, 6, 0]} maxBarSize={18} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </Panel>
       </div>
 
       {/* Upcoming Exams */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass rounded-xl p-4">
-        <h3 className="text-sm font-semibold text-foreground mb-4">Upcoming Examinations</h3>
+      <Panel
+        title="Upcoming Examinations"
+        description="4 exams scheduled in the next 2 weeks"
+        accentColor={MODULE_COLOR}
+        actions={
+          <button className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-0.5">
+            Schedule <ArrowRight className="w-3 h-3" />
+          </button>
+        }
+        index={2}
+        gridColumns={1}
+        bodyClassName="pt-2"
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {upcomingExams.map((exam) => (
-            <div key={exam.subject} className="rounded-xl border border-border p-3 hover:border-purple-500/30 transition-colors">
+            <div
+              key={exam.subject}
+              className="rounded-lg border border-border/70 p-3 hover:border-[color:var(--panel-accent)]/40 hover:bg-accent/30 transition-all"
+              style={{ ['--panel-accent' as string]: MODULE_COLOR }}
+            >
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                <span className="text-xs text-muted-foreground">{exam.date}</span>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: MODULE_COLOR }} />
+                <span className="text-xs text-muted-foreground num-tabular">{exam.date}</span>
               </div>
               <p className="text-sm font-medium text-foreground">{exam.subject}</p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-xs text-muted-foreground">{exam.time}</span>
-                <span className="text-xs text-muted-foreground">{exam.students} students</span>
+              <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1 num-tabular">
+                  <Clock className="w-3 h-3" />
+                  {exam.time}
+                </span>
+                <span className="flex items-center gap-1 num-tabular">
+                  <Users className="w-3 h-3" />
+                  {exam.students}
+                </span>
               </div>
             </div>
           ))}
         </div>
-      </motion.div>
+      </Panel>
     </div>
   );
 }

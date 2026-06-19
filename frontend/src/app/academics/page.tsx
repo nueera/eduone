@@ -1,14 +1,27 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { BookOpen, Users, Clock, TrendingUp, ArrowUpRight } from 'lucide-react';
+import { BookOpen, Users, Clock, TrendingUp, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { StatCard } from '@/components/ui/stat-card';
+import { Panel } from '@/components/ui/panel';
+import { ChartTooltip, chartGridProps, chartAxisProps } from '@/components/ui/chart-tooltip';
 
-const stats = [
-  { label: 'Active Courses', value: '48', change: '+4', icon: BookOpen, color: '#3B82F6' },
-  { label: 'Faculty Members', value: '156', change: '+8', icon: Users, color: '#60A5FA' },
-  { label: 'Avg Attendance', value: '87%', change: '+3%', icon: Clock, color: '#93C5FD' },
-  { label: 'Pass Rate', value: '92%', change: '+2%', icon: TrendingUp, color: '#3B82F6' },
+const MODULE_COLOR = '#3B82F6';
+
+const heroStat = {
+  label: 'Pass Rate',
+  value: '92',
+  unit: '%',
+  icon: TrendingUp,
+  delta: 2.1,
+  deltaLabel: 'vs last semester',
+  trend: [84, 86, 88, 89, 90, 91, 92],
+};
+
+const secondaryStats = [
+  { label: 'Active Courses', value: '48', icon: BookOpen, delta: 9, trend: [40, 42, 44, 45, 46, 48] },
+  { label: 'Faculty Members', value: '156', icon: Users, delta: 5, trend: [142, 145, 148, 152, 154, 156] },
+  { label: 'Avg Attendance', value: '87', unit: '%', icon: Clock, delta: 3, trend: [78, 80, 82, 84, 86, 87] },
 ];
 
 const departmentData = [
@@ -38,95 +51,147 @@ const upcomingClasses = [
 
 export default function AcademicsDashboard() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="glass rounded-xl p-4 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}18` }}>
-                  <Icon className="w-4 h-4" style={{ color: stat.color }} />
-                </div>
-                <span className="text-xs font-medium text-green-500 flex items-center gap-0.5">
-                  <ArrowUpRight className="w-3 h-3" />{stat.change}
-                </span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
-            </motion.div>
-          );
-        })}
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 noise-overlay">
+      {/* Asymmetric stat grid */}
+      <div className="grid grid-cols-12 gap-4">
+        <StatCard
+          size="hero"
+          className="col-span-12 lg:col-span-6"
+          label={heroStat.label}
+          value={heroStat.value}
+          unit={heroStat.unit}
+          icon={heroStat.icon}
+          accentColor={MODULE_COLOR}
+          delta={heroStat.delta}
+          deltaLabel={heroStat.deltaLabel}
+          trend={heroStat.trend}
+          index={0}
+          gridColumns={12}
+        />
+        {secondaryStats.map((stat, i) => (
+          <StatCard
+            key={stat.label}
+            size="md"
+            className="col-span-12 sm:col-span-6 lg:col-span-2"
+            label={stat.label}
+            value={stat.value}
+            unit={stat.unit}
+            icon={stat.icon}
+            accentColor={MODULE_COLOR}
+            delta={stat.delta}
+            trend={stat.trend}
+            index={i + 1}
+            gridColumns={12}
+          />
+        ))}
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-3 glass rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-foreground mb-4">Department Strength</h3>
-          <div className="h-64">
+        <Panel
+          className="lg:col-span-3"
+          title="Department Strength"
+          description="Students vs faculty by department"
+          accentColor={MODULE_COLOR}
+          index={0}
+          gridColumns={2}
+          bodyClassName="pt-2"
+        >
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={departmentData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="dept" tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <YAxis tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <Tooltip contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: 12 }} />
-                <Bar dataKey="students" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="faculty" fill="#93C5FD" radius={[4, 4, 0, 0]} />
+              <BarChart data={departmentData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+                <CartesianGrid {...chartGridProps} />
+                <XAxis dataKey="dept" {...chartAxisProps} />
+                <YAxis {...chartAxisProps} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--accent)', opacity: 0.3 }} />
+                <Bar dataKey="students" fill="#3B82F6" radius={[6, 6, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="faculty" fill="#93C5FD" radius={[6, 6, 0, 0]} maxBarSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </Panel>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2 glass rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-foreground mb-4">Course Distribution</h3>
-          <div className="h-64">
+        <Panel
+          className="lg:col-span-2"
+          title="Course Distribution"
+          description="Active programs by enrollment"
+          accentColor={MODULE_COLOR}
+          index={1}
+          gridColumns={2}
+          bodyClassName="pt-2"
+        >
+          <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={courseDistribution} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value">
+                <Pie
+                  data={courseDistribution}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={56}
+                  outerRadius={84}
+                  paddingAngle={3}
+                  dataKey="value"
+                  stroke="none"
+                >
                   {courseDistribution.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: 12 }} />
+                <Tooltip content={<ChartTooltip hideSwatch valueFormatter={(v) => `${v}%`} />} />
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex flex-wrap gap-2 mt-2 justify-center">
+          <div className="flex flex-wrap gap-3 mt-3 justify-center">
             {courseDistribution.map((item) => (
               <div key={item.name} className="flex items-center gap-1.5 text-xs">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
                 <span className="text-muted-foreground">{item.name}</span>
+                <span className="text-foreground font-medium num-tabular">{item.value}%</span>
               </div>
             ))}
           </div>
-        </motion.div>
+        </Panel>
       </div>
 
       {/* Today's Schedule */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass rounded-xl p-4">
-        <h3 className="text-sm font-semibold text-foreground mb-4">Today&apos;s Schedule</h3>
-        <div className="space-y-2">
+      <Panel
+        title="Today's Schedule"
+        description="5 classes across departments"
+        accentColor={MODULE_COLOR}
+        actions={
+          <button className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-0.5">
+            Full timetable <ArrowRight className="w-3 h-3" />
+          </button>
+        }
+        index={2}
+        gridColumns={1}
+        bodyClassName="pt-2"
+      >
+        <div className="space-y-1">
           {upcomingClasses.map((cls) => (
-            <div key={cls.subject} className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-accent transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-1 h-8 rounded-full bg-blue-500" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">{cls.subject}</p>
-                  <p className="text-xs text-muted-foreground">{cls.faculty} · {cls.room}</p>
+            <div
+              key={cls.subject}
+              className="flex items-center justify-between py-2.5 px-2 -mx-2 rounded-lg hover:bg-accent/50 transition-colors"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="w-1 h-8 rounded-full shrink-0"
+                  style={{ backgroundColor: MODULE_COLOR }}
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{cls.subject}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {cls.faculty} · {cls.room}
+                  </p>
                 </div>
               </div>
-              <span className="text-xs font-medium text-muted-foreground">{cls.time}</span>
+              <span className="text-xs font-medium text-muted-foreground num-tabular shrink-0 ml-3">
+                {cls.time}
+              </span>
             </div>
           ))}
         </div>
-      </motion.div>
+      </Panel>
     </div>
   );
 }

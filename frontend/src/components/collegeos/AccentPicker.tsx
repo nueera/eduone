@@ -23,7 +23,9 @@ export default function AccentPicker() {
           )}
           style={{
             backgroundColor: opt.hex,
-            ringColor: opt.hex,
+            // Tailwind's `ring` color via the className above uses --tw-ring-color.
+            // Set it here so the active ring matches the swatch color.
+            ['--tw-ring-color' as string]: opt.hex,
           }}
           title={opt.name}
         />

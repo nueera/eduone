@@ -3,7 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "description": "Full-stack modular campus management platform — Admission CRM, Academic Ops, Examination, Campus Ops & Finance in one unified app. Built with Next.js 16, TypeScript, Tailwind CSS 4, and shadcn/ui.",
-  "keywords": ["collegeos", "campus-management", "erp", "education", "nextjs", "react", "typescript", "tailwindcss", "shadcn-ui"],
+  "keywords": [
+    "collegeos",
+    "campus-management",
+    "erp",
+    "education",
+    "nextjs",
+    "react",
+    "typescript",
+    "tailwindcss",
+    "shadcn-ui"
+  ],
   "license": "MIT",
   "author": "CollegeOS Team",
   "scripts": {
@@ -68,10 +78,12 @@
     "react-day-picker": "^9.8.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.60.0",
+    "react-resizable-panels": "^2.1.9",
     "recharts": "^2.15.4",
     "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
+    "vaul": "^1.1.2",
     "zod": "^4.0.2",
     "zustand": "^5.0.6"
   },
