@@ -412,6 +412,83 @@
 
 /* ============ EXISTING PATTERNS (kept + upgraded) ============ */
 
+/* ============ ACCENT UTILITY SYSTEM ============
+   Reusable utility classes for accent-tinted UI primitives.
+   Every class reads from `--panel-accent` (set per-scope by Panel,
+   SubModuleLanding, SubModuleGrid, or any container that wants to
+   brand itself with an accent color). This means:
+
+   - No inline `style={{ background: color-mix(...) }}` calls in JSX
+   - No per-component hardcoded percentages — tune here, applies everywhere
+   - Works in light + dark mode automatically (uses color-mix on the
+     accent CSS variable, which is theme-aware)
+   - Falls back to `--primary` when no `--panel-accent` is set
+
+   Usage:
+     <div style={{ '--panel-accent': '#A855F7' }}>
+       <span className="accent-chip"><Icon /></span>
+       <span className="accent-text">QPD</span>
+     </div>
+*/
+
+/* Icon chip — square rounded container with accent-tinted background
+   and accent-colored foreground. Used for module/sub-module icons. */
+.accent-chip {
+  background: color-mix(in oklch, var(--panel-accent, var(--primary)) 16%, transparent);
+  color: var(--panel-accent, var(--primary));
+}
+
+/* Icon chip — compact variant (slightly less tint) for smaller glyphs */
+.accent-chip-soft {
+  background: color-mix(in oklch, var(--panel-accent, var(--primary)) 12%, transparent);
+  color: var(--panel-accent, var(--primary));
+}
+
+/* Text colored with the accent — for codes, labels, arrows, deltas */
+.accent-text {
+  color: var(--panel-accent, var(--primary));
+}
+
+/* Small accent-colored dot — used as list bullet, status indicator */
+.accent-bullet {
+  background-color: var(--panel-accent, var(--primary));
+}
+
+/* Top hairline accent — thin gradient line at top of a surface */
+.accent-hairline {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--panel-accent, var(--primary)),
+    transparent
+  );
+}
+
+/* Accent wash background — radial gradient that follows the cursor via
+   `--spot-x` / `--spot-y` (set by mousemove handler). Used on tiles
+   and panels for the spotlight-follow effect. */
+.accent-wash {
+  background: radial-gradient(
+    360px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    color-mix(in oklch, var(--panel-accent, var(--primary)) 14%, transparent),
+    transparent 60%
+  );
+}
+
+/* CTA pill button — uses accent-tinted background + accent foreground,
+   with a subtle translate on hover. Pairs with .accent-chip siblings. */
+.accent-cta {
+  background: color-mix(in oklch, var(--panel-accent, var(--primary)) 14%, transparent);
+  color: var(--panel-accent, var(--primary));
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              background 0.25s ease;
+}
+.accent-cta:hover {
+  background: color-mix(in oklch, var(--panel-accent, var(--primary)) 22%, transparent);
+}
+
+/* ============ EXISTING PATTERNS (kept + upgraded) ============ */
+
 /* Dot Grid Pattern */
 .dot-grid {
   background-image: radial-gradient(circle, oklch(0.5 0 0 / 15%) 1px, transparent 1px);

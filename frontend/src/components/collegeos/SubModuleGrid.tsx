@@ -2,9 +2,11 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import SubModuleTile from './SubModuleTile';
 import { useAppStore } from '@/stores/useAppStore';
 import type { ExaminationSubModule } from '@/lib/examination-modules';
@@ -19,7 +21,7 @@ interface SubModuleGridProps {
   /** Parent module accent color (hex). */
   parentColor: string;
   /** Optional parent icon component. */
-  parentIcon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  parentIcon?: React.ComponentType<{ className?: string }>;
   /** Optional intro paragraph shown under the title. */
   intro?: string;
 }
@@ -30,8 +32,14 @@ interface SubModuleGridProps {
  * In-module launcher grid. Renders the same Windows 8 / Metro-inspired
  * tile pattern as the global homepage, but scoped to one module.
  *
- * Reuses the global Background, glass surfaces, and OKLCH theme — no
- * bespoke CSS, no hardcoded colors.
+ * All theming flows through the global accent utility system — the
+ * parent container scopes `--panel-accent` once, and every accent-
+ * tinted child (icon chip, title accent) reads from it via utility
+ * classes. No inline `color-mix`, no per-instance styling.
+ *
+ * Uses the global `Button` and `Input` components instead of
+ * hand-rolled controls so focus rings, keyboard nav, and hover states
+ * stay consistent across the app.
  */
 export default function SubModuleGrid({
   modules,
@@ -60,17 +68,27 @@ export default function SubModuleGrid({
   const gridColumns = 4;
 
   return (
-    <div className="relative z-10 flex flex-col items-center gap-6 px-4 sm:px-6 pb-24 pt-4">
-      {/* Back + parent label */}
-      <motion.button
+    // Scope --panel-accent once at the grid root — every accent-tinted
+    // descendant reads from this via the global utility classes.
+    <div
+      className="relative z-10 flex flex-col items-center gap-6 px-4 sm:px-6 pb-24 pt-4"
+      style={{ ['--panel-accent' as string]: parentColor }}
+    >
+      {/* Back + parent label — uses global Button (ghost variant) */}
+      <motion.div
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
-        onClick={() => router.push('/')}
-        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors glass rounded-full px-3 py-1.5"
       >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        Back to Home
-      </motion.button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push('/')}
+          className="glass rounded-full"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to Home
+        </Button>
+      </motion.div>
 
       {/* Title block */}
       <motion.div
@@ -81,16 +99,8 @@ export default function SubModuleGrid({
       >
         <div className="flex items-center justify-center gap-3">
           {ParentIcon && (
-            <div
-              className="flex items-center justify-center w-10 h-10 rounded-xl"
-              style={{
-                background: `color-mix(in oklch, ${parentColor} 16%, transparent)`,
-              }}
-            >
-              <ParentIcon
-                className="w-5 h-5"
-                style={{ color: parentColor }}
-              />
+            <div className="accent-chip flex items-center justify-center w-10 h-10 rounded-xl">
+              <ParentIcon className="w-5 h-5" />
             </div>
           )}
           <h1 className="display-hero font-display text-foreground">
@@ -104,29 +114,32 @@ export default function SubModuleGrid({
         )}
       </motion.div>
 
-      {/* Search */}
+      {/* Search — global Input component wrapped in a glass surface */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="w-full max-w-md"
       >
-        <div className="glass rounded-xl flex items-center gap-2 px-3 py-2">
-          <Search className="w-4 h-4 text-muted-foreground" />
-          <input
+        <div className="glass rounded-xl flex items-center gap-2 px-3 py-1.5 focus-within:ring-2 focus-within:ring-ring/50 transition-shadow">
+          <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+          <Input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={`Search ${parentName} modules\u2026`}
-            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            className="border-0 shadow-none focus-visible:ring-0 bg-transparent h-7 px-0"
           />
           {searchQuery && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0"
               onClick={() => setSearchQuery('')}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
             >
-              Clear
-            </button>
+              <X className="w-3 h-3" />
+            </Button>
           )}
         </div>
       </motion.div>
