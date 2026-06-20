@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '@/stores/useAppStore';
 import { cn } from '@/lib/utils';
+import { EXAMINATION_SUBMODULES } from '@/lib/examination-modules';
 
 const commands = [
   { id: 'admission', label: 'Go to Admission CRM', icon: UserPlus, path: '/admission' },
@@ -26,6 +27,14 @@ const commands = [
   { id: 'analytics', label: 'Go to Analytics', icon: BarChart3, path: '/' },
   { id: 'notifications', label: 'View Notifications', icon: Bell, path: '/' },
   { id: 'settings', label: 'Open Settings', icon: Settings, path: '/' },
+  // Examination sub-modules — auto-derived so the palette never drifts
+  // from the launcher grid.
+  ...EXAMINATION_SUBMODULES.map((m) => ({
+    id: `examination-${m.id}`,
+    label: `${m.code} \u2014 ${m.name}`,
+    icon: m.icon,
+    path: `/examination/${m.id}`,
+  })),
 ];
 
 export default function CommandPalette() {
