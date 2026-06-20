@@ -13,7 +13,7 @@ export function ModuleSkeleton({ moduleColor }: ModuleSkeletonProps) {
       <div className="flex items-center gap-4">
         <div
           className="w-10 h-10 rounded-xl animate-pulse"
-          style={{ backgroundColor: `${moduleColor}20` }}
+          style={{ backgroundColor: `color-mix(in oklch, ${moduleColor} 14%, transparent)` }}
         />
         <div className="space-y-2">
           <div className="h-5 w-40 rounded bg-muted animate-pulse" />

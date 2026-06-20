@@ -6,13 +6,15 @@
  * from this array, so adding/removing a sub-module only needs an edit here.
  *
  * Convention:
- *   id    — short URL-safe slug (used for /examination/<id>)
- *   code  — human-readable abbreviation shown on the tile (QPD, OSM, …)
- *   name  — full product name
- *   blurb — one-line marketing description
- *   icon  — lucide-react icon component
- *   accent — hex color used to tint the tile; all derive from the
- *            examination purple family so the launcher stays cohesive.
+ *   id     — short URL-safe slug (used for /examination/<id>)
+ *   code   — human-readable abbreviation shown on the tile (QPD, OSM, …)
+ *   name   — full product name
+ *   blurb  — one-line marketing description
+ *   icon   — lucide-react icon component
+ *   accent — CSS variable reference (e.g. `var(--exam-accent-qpd)`)
+ *            pointing at a token defined in globals.css. No hardcoded hex
+ *            values; the entire palette is theme-aware (light/dark) and
+ *            lives in one place.
  */
 
 import {
@@ -33,23 +35,25 @@ export interface ExaminationSubModule {
   name: string;
   blurb: string;
   icon: LucideIcon;
+  /** CSS variable reference — resolved at render time via `--panel-accent`. */
   accent: string;
 }
 
 /**
- * Accent palette — eight perceptually-spaced hues neighbouring the
- * examination module purple (oklch hue ≈ 300). Kept here so a future
- * redesign only touches one block.
+ * Accent palette — eight CSS variable references, one per sub-module.
+ * The variables themselves are defined in `globals.css` under both
+ * `:root` (light) and `.dark` (dark), so a future palette refresh only
+ * touches one block in CSS, never this file.
  */
 const ACCENTS = {
-  qpd: '#A855F7', // primary examination purple
-  osm: '#9333EA',
-  oes: '#8B5CF6',
-  rps: '#7C3AED',
-  qpm: '#C084FC',
-  rrs: '#D946EF',
-  ses: '#A78BFA',
-  qpg: '#9F67F5',
+  qpd: 'var(--exam-accent-qpd)',
+  osm: 'var(--exam-accent-osm)',
+  oes: 'var(--exam-accent-oes)',
+  rps: 'var(--exam-accent-rps)',
+  qpm: 'var(--exam-accent-qpm)',
+  rrs: 'var(--exam-accent-rrs)',
+  ses: 'var(--exam-accent-ses)',
+  qpg: 'var(--exam-accent-qpg)',
 } as const;
 
 export const EXAMINATION_SUBMODULES: ExaminationSubModule[] = [

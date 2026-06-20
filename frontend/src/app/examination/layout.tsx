@@ -11,9 +11,13 @@ import { ModuleErrorBoundary } from '@/components/global/ModuleErrorBoundary';
  * Sub-routes that need the workspace chrome live under the
  * `(workspace)` route group and get their own layout with
  * ModuleSidebar + ModuleTopbar.
+ *
+ * The module color is referenced via the global `--module-examination`
+ * CSS variable (defined in globals.css), not a hardcoded hex. This
+ * keeps the layout theme-aware (light/dark) for free.
  */
-const MODULE_COLOR = '#A855F7';
 const MODULE_NAME = 'Examination';
+const MODULE_COLOR = 'var(--module-examination)';
 
 export default function ExaminationRootLayout({
   children,

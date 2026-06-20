@@ -1,12 +1,23 @@
 'use client';
 
-import { FileCheck, Calendar, Award, TrendingUp, Clock, Users, ArrowRight } from 'lucide-react';
+import { FileCheck, Calendar, Award, TrendingUp, Clock, Users } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { StatCard } from '@/components/ui/stat-card';
 import { Panel } from '@/components/ui/panel';
 import { ChartTooltip, chartGridProps, chartAxisProps, chartActiveDot } from '@/components/ui/chart-tooltip';
 
-const MODULE_COLOR = '#A855F7';
+/**
+ * Examination Dashboard
+ * ---------------------
+ * All theming flows through the global `--module-examination` CSS
+ * variable (defined in globals.css). No hardcoded hex colors anywhere —
+ * charts read the same token via the `var(--module-examination)` string,
+ * which Recharts passes straight through to `stroke` / `fill` CSS props.
+ *
+ * Status dots on the upcoming-exam cards use the `.accent-bullet`
+ * utility class — same pattern as SubModuleLanding feature bullets.
+ */
+const MODULE_ACCENT = 'var(--module-examination)';
 
 const heroStat = {
   label: 'Average Score',
@@ -50,7 +61,10 @@ const upcomingExams = [
 
 export default function ExaminationDashboardPage() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 noise-overlay">
+    <div
+      className="p-4 sm:p-6 lg:p-8 space-y-6 noise-overlay"
+      style={{ ['--panel-accent' as string]: MODULE_ACCENT }}
+    >
       {/* Asymmetric stat grid */}
       <div className="grid grid-cols-12 gap-4">
         <StatCard
@@ -60,7 +74,7 @@ export default function ExaminationDashboardPage() {
           value={heroStat.value}
           unit={heroStat.unit}
           icon={heroStat.icon}
-          accentColor={MODULE_COLOR}
+          accentColor={MODULE_ACCENT}
           delta={heroStat.delta}
           deltaLabel={heroStat.deltaLabel}
           trend={heroStat.trend}
@@ -75,7 +89,7 @@ export default function ExaminationDashboardPage() {
             label={stat.label}
             value={stat.value}
             icon={stat.icon}
-            accentColor={MODULE_COLOR}
+            accentColor={MODULE_ACCENT}
             delta={stat.delta}
             trend={stat.trend}
             index={i + 1}
@@ -90,7 +104,7 @@ export default function ExaminationDashboardPage() {
           className="lg:col-span-3"
           title="Semester Pass Rate Trend"
           description="Pass rate & distinction % across 6 semesters"
-          accentColor={MODULE_COLOR}
+          accentColor={MODULE_ACCENT}
           index={0}
           gridColumns={2}
           bodyClassName="pt-2"
@@ -106,7 +120,7 @@ export default function ExaminationDashboardPage() {
                   type="monotone"
                   dataKey="passRate"
                   name="Pass Rate"
-                  stroke="#A855F7"
+                  stroke={MODULE_ACCENT}
                   strokeWidth={2}
                   dot={false}
                   activeDot={chartActiveDot}
@@ -115,7 +129,7 @@ export default function ExaminationDashboardPage() {
                   type="monotone"
                   dataKey="distinction"
                   name="Distinction"
-                  stroke="#D8B4FE"
+                  stroke="color-mix(in oklch, var(--module-examination) 55%, var(--muted-foreground))"
                   strokeWidth={2}
                   strokeDasharray="4 3"
                   dot={false}
@@ -130,7 +144,7 @@ export default function ExaminationDashboardPage() {
           className="lg:col-span-2"
           title="Subject Averages"
           description="Average score by subject"
-          accentColor={MODULE_COLOR}
+          accentColor={MODULE_ACCENT}
           index={1}
           gridColumns={2}
           bodyClassName="pt-2"
@@ -142,23 +156,18 @@ export default function ExaminationDashboardPage() {
                 <XAxis type="number" {...chartAxisProps} domain={[0, 100]} />
                 <YAxis dataKey="subject" type="category" {...chartAxisProps} width={88} />
                 <Tooltip content={<ChartTooltip suffix="%" />} cursor={{ fill: 'var(--accent)', opacity: 0.3 }} />
-                <Bar dataKey="avg" name="Average" fill="#A855F7" radius={[0, 6, 6, 0]} maxBarSize={18} />
+                <Bar dataKey="avg" name="Average" fill={MODULE_ACCENT} radius={[0, 6, 6, 0]} maxBarSize={18} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Panel>
       </div>
 
-      {/* Upcoming Exams */}
+      {/* Upcoming Exams — accent comes from the parent --panel-accent scope */}
       <Panel
         title="Upcoming Examinations"
         description="4 exams scheduled in the next 2 weeks"
-        accentColor={MODULE_COLOR}
-        actions={
-          <button className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-0.5">
-            Schedule <ArrowRight className="w-3 h-3" />
-          </button>
-        }
+        accentColor={MODULE_ACCENT}
         index={2}
         gridColumns={1}
         bodyClassName="pt-2"
@@ -168,10 +177,10 @@ export default function ExaminationDashboardPage() {
             <div
               key={exam.subject}
               className="rounded-lg border border-border/70 p-3 hover:border-[color:var(--panel-accent)]/40 hover:bg-accent/30 transition-all"
-              style={{ ['--panel-accent' as string]: MODULE_COLOR }}
             >
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: MODULE_COLOR }} />
+                {/* Bullet — global .accent-bullet utility, reads from --panel-accent */}
+                <span className="accent-bullet w-1.5 h-1.5 rounded-full shrink-0" />
                 <span className="text-xs text-muted-foreground num-tabular">{exam.date}</span>
               </div>
               <p className="text-sm font-medium text-foreground">{exam.subject}</p>

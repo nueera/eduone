@@ -3,7 +3,6 @@
 import { useRef, type MouseEventHandler } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { staggerByIndex } from '@/lib/motion';
 import type { ExaminationSubModule } from '@/lib/examination-modules';
@@ -24,23 +23,26 @@ interface SubModuleTileProps {
  *
  * Built entirely on the global CSS surface + accent utility system:
  *   .glass / .glass-hover / .surface-hover / .spotlight-card
- *   .accent-chip / .accent-text / .accent-hairline / .accent-wash / .accent-cta
+ *   .accent-chip / .accent-text / .accent-hairline / .accent-wash
+ *   .tile-3d / .tile-3d-layer-*  (3D depth utilities)
  *
  * The tile scopes a single `--panel-accent` CSS variable to its own
- * subtree (mapped from the sub-module's accent color), and every
+ * subtree (mapped from the sub-module's accent CSS var), and every
  * accent-tinted child reads from that variable. No inline `color-mix`
  * calls, no hardcoded percentages — tune in globals.css, applies here.
  *
- * Visual structure:
+ * Visual structure (premium product vibe — no Explore / no arrow CTA):
  *   ┌─────────────────────────────┐
+ *   │                             │
  *   │  ┌──┐                       │
  *   │  │IC│  QPD                  │   ← icon + big code
  *   │  └──┘                       │
+ *   │                             │
  *   │  Question Paper Delivery    │   ← full name
  *   │  Safe, secure, and reliable │   ← blurb
  *   │  method of online delivery  │
- *   │  ─────────────────────────  │
- *   │  Explore               →    │   ← CTA
+ *   │  of question papers.        │
+ *   │                             │
  *   └─────────────────────────────┘
  */
 export default function SubModuleTile({
@@ -92,20 +94,19 @@ export default function SubModuleTile({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        'group relative flex flex-col rounded-2xl p-5 cursor-pointer overflow-hidden text-left',
+        'group relative flex flex-col rounded-2xl p-6 cursor-pointer overflow-hidden text-left',
+        'min-h-[200px]',
         // Global surface system — no per-tile CSS
         'glass glass-hover surface-hover',
         // Spotlight overlay is a global utility class
         'spotlight-card',
+        // 3D depth container — utility class handles perspective + tilt
+        'tile-3d',
       )}
       style={{
-        // 3D perspective setup — only structural CSS lives here
-        transformStyle: 'preserve-3d',
-        transform:
-          'perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))',
-        transition: 'transform 0.18s cubic-bezier(0.22, 1, 0.36, 1)',
         // Single source of truth for the tile's accent — every
         // accent-tinted child below reads from this via utility classes.
+        // Value is a CSS var reference, never a hardcoded hex.
         ['--panel-accent' as string]: subModule.accent,
       }}
     >
@@ -121,12 +122,9 @@ export default function SubModuleTile({
         className="accent-hairline pointer-events-none absolute top-0 left-1/4 right-1/4 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500"
       />
 
-      {/* Header row: icon + code */}
-      <div
-        className="relative z-10 flex items-center gap-3"
-        style={{ transform: 'translateZ(30px)' }}
-      >
-        <div className="accent-chip flex items-center justify-center w-11 h-11 rounded-xl transition-transform duration-300 group-hover:scale-105">
+      {/* Header row: icon + code — lifted to front depth */}
+      <div className="tile-3d-layer-front relative z-10 flex items-center gap-3">
+        <div className="accent-chip flex items-center justify-center w-12 h-12 rounded-xl transition-transform duration-300 group-hover:scale-105">
           <Icon
             className="w-5 h-5 transition-transform duration-300"
             strokeWidth={1.75}
@@ -137,30 +135,14 @@ export default function SubModuleTile({
         </span>
       </div>
 
-      {/* Body — full name + blurb */}
-      <div
-        className="relative z-10 mt-4 flex-1"
-        style={{ transform: 'translateZ(20px)' }}
-      >
+      {/* Body — full name + blurb; breathing room for premium feel */}
+      <div className="tile-3d-layer-mid relative z-10 mt-auto pt-8">
         <h3 className="text-sm font-semibold text-foreground tracking-tight">
           {subModule.name}
         </h3>
-        <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed line-clamp-3">
+        <p className="text-xs text-muted-foreground mt-2 leading-relaxed line-clamp-3">
           {subModule.blurb}
         </p>
-      </div>
-
-      {/* CTA row — uses .accent-text + .accent-cta utilities */}
-      <div
-        className="relative z-10 mt-4 pt-3 border-t border-border/60 flex items-center justify-between"
-        style={{ transform: 'translateZ(10px)' }}
-      >
-        <span className="accent-text text-xs font-medium transition-colors">
-          Explore
-        </span>
-        <span className="accent-cta flex items-center justify-center w-7 h-7 rounded-lg group-hover:translate-x-0.5">
-          <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
-        </span>
       </div>
     </motion.button>
   );

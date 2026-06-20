@@ -121,6 +121,19 @@
   --module-campus: oklch(0.6 0.2 160);
   --module-finance: oklch(0.6 0.2 145);
 
+  /* Examination sub-module accents — 8 perceptually-spaced hues neighbouring
+     the examination purple (oklch hue ≈ 300). Defined as CSS variables so
+     `examination-modules.ts` can reference them by name instead of hardcoding
+     hex values. All derive from the examination purple family for cohesion. */
+  --exam-accent-qpd: oklch(0.65 0.2 300);
+  --exam-accent-osm: oklch(0.62 0.2 295);
+  --exam-accent-oes: oklch(0.67 0.19 305);
+  --exam-accent-rps: oklch(0.60 0.21 290);
+  --exam-accent-qpm: oklch(0.70 0.18 310);
+  --exam-accent-rrs: oklch(0.68 0.20 325);
+  --exam-accent-ses: oklch(0.66 0.19 280);
+  --exam-accent-qpg: oklch(0.64 0.20 315);
+
   /* Glass Surface */
   --glass-bg: oklch(1 0 0 / 65%);
   --glass-border: oklch(0.5 0 0 / 12%);
@@ -209,6 +222,17 @@
   --module-examination: oklch(0.7 0.2 300);
   --module-campus: oklch(0.65 0.2 160);
   --module-finance: oklch(0.65 0.2 145);
+
+  /* Examination sub-module accents (dark) — lifted lightness + slightly
+     reduced chroma for premium dark UIs. Mirrors the light-mode palette. */
+  --exam-accent-qpd: oklch(0.70 0.2 300);
+  --exam-accent-osm: oklch(0.68 0.2 295);
+  --exam-accent-oes: oklch(0.72 0.19 305);
+  --exam-accent-rps: oklch(0.66 0.21 290);
+  --exam-accent-qpm: oklch(0.74 0.18 310);
+  --exam-accent-rrs: oklch(0.73 0.20 325);
+  --exam-accent-ses: oklch(0.71 0.19 280);
+  --exam-accent-qpg: oklch(0.69 0.20 315);
 
   /* Glass Surface (dark) — slightly more transparent for depth */
   --glass-bg: oklch(0.2 0.022 260 / 55%);
@@ -411,6 +435,53 @@
 }
 
 /* ============ EXISTING PATTERNS (kept + upgraded) ============ */
+
+/* ============ TILE 3D DEPTH UTILITIES ============
+   SubModuleTile uses CSS preserve-3d + translateZ to lift interactive
+   layers (icon, body, footer) at different depths. Centralized here so
+   the tile component never inlines transform styles. */
+
+.tile-3d {
+  transform-style: preserve-3d;
+  transform:
+    perspective(900px)
+    rotateX(var(--tilt-x, 0deg))
+    rotateY(var(--tilt-y, 0deg));
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tile-3d-layer-front {
+  transform: translateZ(30px);
+  transform-style: preserve-3d;
+}
+
+.tile-3d-layer-mid {
+  transform: translateZ(20px);
+}
+
+.tile-3d-layer-base {
+  transform: translateZ(10px);
+}
+
+/* ============ STATUS INDICATOR DOTS ============
+   Small pulsing dots used on the launcher status bar. Reads from
+   semantic status tokens (no hardcoded hex). */
+.status-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  display: inline-block;
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+.status-dot-operational { background-color: var(--status-success); }
+.status-dot-degraded    { background-color: var(--status-warning); }
+.status-dot-down        { background-color: var(--status-danger); }
+.status-dot-info        { background-color: var(--status-info); }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
 
 /* ============ ACCENT UTILITY SYSTEM ============
    Reusable utility classes for accent-tinted UI primitives.

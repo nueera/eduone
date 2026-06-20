@@ -40,7 +40,7 @@ export function ModuleSidebar({ items, moduleColor, moduleName, moduleIcon: Modu
       <div className="flex items-center gap-3 px-4 h-14 border-b border-border">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-          style={{ backgroundColor: `${moduleColor}18` }}
+          style={{ backgroundColor: `color-mix(in oklch, ${moduleColor} 14%, transparent)` }}
         >
           <ModuleIcon className="w-4 h-4" style={{ color: moduleColor }} />
         </div>
@@ -90,7 +90,7 @@ export function ModuleSidebar({ items, moduleColor, moduleName, moduleIcon: Modu
                   ? 'text-foreground font-medium'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
-              style={isActive ? { backgroundColor: `${moduleColor}12` } : undefined}
+              style={isActive ? { backgroundColor: `color-mix(in oklch, ${moduleColor} 12%, transparent)` } : undefined}
             >
               <Icon
                 className="w-4 h-4 shrink-0"
