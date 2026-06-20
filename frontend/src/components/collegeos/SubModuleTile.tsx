@@ -21,9 +21,15 @@ interface SubModuleTileProps {
  * SubModuleTile
  * -------------
  * Windows 8 / Metro-inspired card used inside a module launcher page.
- * Built on the same global CSS surface system as the rest of CollegeOS
- * (`.glass`, `.glass-hover`, `.surface-hover`, `.num-tabular`) so theme
- * + dark-mode + accent-sync all keep working without per-tile CSS.
+ *
+ * Built entirely on the global CSS surface + accent utility system:
+ *   .glass / .glass-hover / .surface-hover / .spotlight-card
+ *   .accent-chip / .accent-text / .accent-hairline / .accent-wash / .accent-cta
+ *
+ * The tile scopes a single `--panel-accent` CSS variable to its own
+ * subtree (mapped from the sub-module's accent color), and every
+ * accent-tinted child reads from that variable. No inline `color-mix`
+ * calls, no hardcoded percentages — tune in globals.css, applies here.
  *
  * Visual structure:
  *   ┌─────────────────────────────┐
@@ -56,9 +62,11 @@ export default function SubModuleTile({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    // Spotlight position — consumed by .accent-wash + .spotlight-card
     ref.current.style.setProperty('--spot-x', `${(x / rect.width) * 100}%`);
     ref.current.style.setProperty('--spot-y', `${(y / rect.height) * 100}%`);
 
+    // 3D tilt — subtle, max ~3deg
     const rx = ((y / rect.height) - 0.5) * -6;
     const ry = ((x / rect.width) - 0.5) * 6;
     ref.current.style.setProperty('--tilt-x', `${rx}deg`);
@@ -85,37 +93,32 @@ export default function SubModuleTile({
       onMouseLeave={handleMouseLeave}
       className={cn(
         'group relative flex flex-col rounded-2xl p-5 cursor-pointer overflow-hidden text-left',
-        // Pull in the global surface system — no per-tile CSS needed
+        // Global surface system — no per-tile CSS
         'glass glass-hover surface-hover',
-        // Spotlight overlay is a global utility class (.spotlight-card)
+        // Spotlight overlay is a global utility class
         'spotlight-card',
       )}
       style={{
+        // 3D perspective setup — only structural CSS lives here
         transformStyle: 'preserve-3d',
         transform:
           'perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))',
         transition: 'transform 0.18s cubic-bezier(0.22, 1, 0.36, 1)',
-        ['--tile-accent' as string]: subModule.accent,
+        // Single source of truth for the tile's accent — every
+        // accent-tinted child below reads from this via utility classes.
+        ['--panel-accent' as string]: subModule.accent,
       }}
     >
-      {/* Accent wash on hover — uses tile accent via CSS var */}
+      {/* Accent wash on hover — global .accent-wash utility */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{
-          background:
-            'radial-gradient(360px circle at var(--spot-x, 50%) var(--spot-y, 50%), color-mix(in oklch, var(--tile-accent) 14%, transparent), transparent 60%)',
-        }}
+        className="accent-wash pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
       />
 
-      {/* Top hairline accent — hover only */}
+      {/* Top hairline accent — global .accent-hairline utility */}
       <div
         aria-hidden
-        className="pointer-events-none absolute top-0 left-1/4 right-1/4 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{
-          background:
-            'linear-gradient(90deg, transparent, var(--tile-accent), transparent)',
-        }}
+        className="accent-hairline pointer-events-none absolute top-0 left-1/4 right-1/4 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500"
       />
 
       {/* Header row: icon + code */}
@@ -123,23 +126,13 @@ export default function SubModuleTile({
         className="relative z-10 flex items-center gap-3"
         style={{ transform: 'translateZ(30px)' }}
       >
-        <div
-          className="flex items-center justify-center w-11 h-11 rounded-xl transition-transform duration-300 group-hover:scale-105"
-          style={{
-            background:
-              'color-mix(in oklch, var(--tile-accent) 16%, transparent)',
-          }}
-        >
+        <div className="accent-chip flex items-center justify-center w-11 h-11 rounded-xl transition-transform duration-300 group-hover:scale-105">
           <Icon
             className="w-5 h-5 transition-transform duration-300"
-            style={{ color: 'var(--tile-accent)' }}
             strokeWidth={1.75}
           />
         </div>
-        <span
-          className="display-title font-display num-tabular"
-          style={{ color: 'var(--foreground)' }}
-        >
+        <span className="display-title font-display num-tabular text-foreground">
           {subModule.code}
         </span>
       </div>
@@ -157,25 +150,15 @@ export default function SubModuleTile({
         </p>
       </div>
 
-      {/* CTA row */}
+      {/* CTA row — uses .accent-text + .accent-cta utilities */}
       <div
         className="relative z-10 mt-4 pt-3 border-t border-border/60 flex items-center justify-between"
         style={{ transform: 'translateZ(10px)' }}
       >
-        <span
-          className="text-xs font-medium transition-colors"
-          style={{ color: 'var(--tile-accent)' }}
-        >
+        <span className="accent-text text-xs font-medium transition-colors">
           Explore
         </span>
-        <span
-          className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-300 group-hover:translate-x-0.5"
-          style={{
-            background:
-              'color-mix(in oklch, var(--tile-accent) 14%, transparent)',
-            color: 'var(--tile-accent)',
-          }}
-        >
+        <span className="accent-cta flex items-center justify-center w-7 h-7 rounded-lg group-hover:translate-x-0.5">
           <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
         </span>
       </div>

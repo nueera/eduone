@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, CircleDot } from 'lucide-react';
 import { Panel } from '@/components/ui/panel';
 import { StatCard } from '@/components/ui/stat-card';
+import { Button } from '@/components/ui/button';
 import type { ExaminationSubModule } from '@/lib/examination-modules';
 
 interface SubModuleLandingProps {
@@ -18,7 +19,7 @@ interface SubModuleLandingProps {
   }[];
   /** Optional feature bullets shown in the overview panel. */
   features?: string[];
-  /** Optional CTA tiles (each renders as a Panel with an arrow). */
+  /** Optional CTA tiles (each renders as a list row with an arrow). */
   actions?: {
     label: string;
     description: string;
@@ -33,8 +34,23 @@ interface SubModuleLandingProps {
  * (/examination/qpd, /examination/osm, …). Centralizes the layout so a
  * new sub-module page is a 10-line file, not a 200-line one.
  *
- * All theming flows from the sub-module's `accent` color through CSS
- * variables — no hardcoding, no per-page CSS.
+ * Theming strategy
+ * ----------------
+ * The root container scopes a single `--panel-accent` CSS variable to
+ * the sub-module's accent color. Every accent-tinted descendant reads
+ * from that variable via the global utility classes defined in
+ * globals.css:
+ *
+ *   .accent-chip    — icon chip background + foreground
+ *   .accent-text    — text colored with the accent
+ *   .accent-bullet  — small accent-colored dot for list bullets
+ *   .accent-hairline — top accent line
+ *
+ * No inline `color-mix` calls. No hardcoded percentages. No per-page
+ * styling. Tune the percentages in globals.css once, applies everywhere.
+ *
+ * Uses the global `Button` component for the back link and CTAs so
+ * focus rings, keyboard nav, and hover states match the rest of the app.
  */
 export default function SubModuleLanding({
   subModule,
@@ -44,37 +60,39 @@ export default function SubModuleLanding({
 }: SubModuleLandingProps) {
   const router = useRouter();
   const Icon = subModule.icon;
-  const accent = subModule.accent;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 noise-overlay">
+    // Scope --panel-accent once at the page root. Every accent-tinted
+    // child below (icon chip, code label, bullet dots, arrow icons)
+    // reads from this via utility classes — no inline color-mix.
+    <div
+      className="p-4 sm:p-6 lg:p-8 space-y-6 noise-overlay"
+      style={{ ['--panel-accent' as string]: subModule.accent }}
+    >
       {/* Page header — back link, code, name, blurb */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col gap-3"
       >
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => router.push('/examination')}
-          className="self-start flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="self-start h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Examination
-        </button>
+        </Button>
 
         <div className="flex items-start gap-4">
-          <div
-            className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0"
-            style={{ background: `color-mix(in oklch, ${accent} 16%, transparent)` }}
-          >
-            <Icon className="w-6 h-6" style={{ color: accent }} strokeWidth={1.75} />
+          {/* Icon chip — global .accent-chip utility */}
+          <div className="accent-chip flex items-center justify-center w-12 h-12 rounded-xl shrink-0">
+            <Icon className="w-6 h-6" strokeWidth={1.75} />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span
-                className="text-xs font-semibold tracking-wider num-tabular"
-                style={{ color: accent }}
-              >
+              <span className="accent-text text-xs font-semibold tracking-wider num-tabular">
                 {subModule.code}
               </span>
               <CircleDot className="w-3 h-3 text-muted-foreground" />
@@ -104,7 +122,7 @@ export default function SubModuleLanding({
               }
               label={stat.label}
               value={stat.value}
-              accentColor={accent}
+              accentColor={subModule.accent}
               delta={stat.delta}
               trend={stat.trend}
               index={i}
@@ -120,7 +138,7 @@ export default function SubModuleLanding({
           className="lg:col-span-2"
           title="Overview"
           description={`What ${subModule.name} does`}
-          accentColor={accent}
+          accentColor={subModule.accent}
           index={0}
           gridColumns={2}
           bodyClassName="pt-2"
@@ -131,10 +149,8 @@ export default function SubModuleLanding({
               <ul className="space-y-2 mt-3">
                 {features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2">
-                    <span
-                      className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ backgroundColor: accent }}
-                    />
+                    {/* Bullet — global .accent-bullet utility */}
+                    <span className="accent-bullet mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" />
                     <span className="text-foreground/80">{feature}</span>
                   </li>
                 ))}
@@ -146,32 +162,31 @@ export default function SubModuleLanding({
         <Panel
           title="Quick Actions"
           description="Common tasks"
-          accentColor={accent}
+          accentColor={subModule.accent}
           index={1}
           gridColumns={2}
           bodyClassName="pt-2"
         >
-          <div className="space-y-2">
+          <div className="space-y-1">
             {actions.length > 0 ? (
               actions.map((action) => (
-                <button
+                <Button
                   key={action.label}
+                  variant="ghost"
                   onClick={action.onClick}
-                  className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors text-left"
+                  className="w-full justify-between p-3 h-auto rounded-lg text-left"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
                       {action.label}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-xs text-muted-foreground truncate font-normal">
                       {action.description}
                     </p>
                   </div>
-                  <ArrowRight
-                    className="w-4 h-4 shrink-0 ml-2"
-                    style={{ color: accent }}
-                  />
-                </button>
+                  {/* Arrow — global .accent-text utility */}
+                  <ArrowRight className="accent-text w-4 h-4 shrink-0 ml-2" />
+                </Button>
               ))
             ) : (
               <p className="text-xs text-muted-foreground py-6 text-center">
