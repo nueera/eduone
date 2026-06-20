@@ -1,194 +1,145 @@
 'use client';
 
-import { FileCheck, Calendar, Award, TrendingUp, Clock, Users, ArrowRight } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { StatCard } from '@/components/ui/stat-card';
-import { Panel } from '@/components/ui/panel';
-import { ChartTooltip, chartGridProps, chartAxisProps, chartActiveDot } from '@/components/ui/chart-tooltip';
+import { motion } from 'framer-motion';
+import { useTheme } from 'next-themes';
+import { Sun, Moon, Command } from 'lucide-react';
+import { FileCheck } from 'lucide-react';
+import Background from '@/components/collegeos/Background';
+import DateTime from '@/components/collegeos/DateTime';
+import CommandPalette from '@/components/collegeos/CommandPalette';
+import AccentPicker from '@/components/collegeos/AccentPicker';
+import SubModuleGrid from '@/components/collegeos/SubModuleGrid';
+import { useAppStore } from '@/stores/useAppStore';
+import { useMounted } from '@/hooks/use-mounted';
+import { EXAMINATION_SUBMODULES } from '@/lib/examination-modules';
 
 const MODULE_COLOR = '#A855F7';
+const MODULE_NAME = 'Examination';
 
-const heroStat = {
-  label: 'Average Score',
-  value: '76',
-  unit: '%',
-  icon: TrendingUp,
-  delta: 5.5,
-  deltaLabel: 'vs last semester',
-  trend: [62, 65, 68, 70, 72, 74, 76],
-};
-
-const secondaryStats = [
-  { label: 'Upcoming Exams', value: '12', icon: Calendar, delta: 0, trend: [8, 9, 10, 11, 12, 12] },
-  { label: 'Results Published', value: '8', icon: Award, delta: 33, trend: [3, 4, 5, 6, 7, 8] },
-  { label: 'Total Exams', value: '156', icon: FileCheck, delta: 8, trend: [120, 130, 138, 145, 150, 156] },
+const statusItems = [
+  { label: 'Exam Scheduler', status: 'operational', color: '#10B981' },
+  { label: 'Question Bank', status: 'operational', color: '#10B981' },
+  { label: 'Results Engine', status: 'operational', color: '#10B981' },
+  { label: 'Marking Pipeline', status: 'degraded', color: '#EAB308' },
 ];
 
-const passRateData = [
-  { semester: 'Sem 1', passRate: 88, distinction: 22 },
-  { semester: 'Sem 2', passRate: 85, distinction: 19 },
-  { semester: 'Sem 3', passRate: 91, distinction: 28 },
-  { semester: 'Sem 4', passRate: 87, distinction: 24 },
-  { semester: 'Sem 5', passRate: 93, distinction: 32 },
-  { semester: 'Sem 6', passRate: 90, distinction: 30 },
-];
+/**
+ * Examination launcher page
+ * -------------------------
+ * Full-screen Windows 8 / Metro-style tile grid mirroring the global
+ * homepage aesthetic. Shows 8 examination sub-modules (QPD, OSM, OES,
+ * RPS, QPM, RRS, SES, QPG). All sub-module data comes from
+ * `EXAMINATION_SUBMODULES` so adding/removing a tile only needs an
+ * edit in `src/lib/examination-modules.ts`.
+ */
+export default function ExaminationLauncherPage() {
+  const { toggleCommandPalette } = useAppStore();
+  const { resolvedTheme, setTheme } = useTheme();
+  const mounted = useMounted();
+  const isDark = mounted ? resolvedTheme === 'dark' : true;
 
-const subjectPerformance = [
-  { subject: 'Data Structures', avg: 72 },
-  { subject: 'DBMS', avg: 78 },
-  { subject: 'OS', avg: 68 },
-  { subject: 'Networks', avg: 74 },
-  { subject: 'ML', avg: 81 },
-];
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  };
 
-const upcomingExams = [
-  { subject: 'Data Structures', date: 'Jun 20', time: '9:00 AM', students: 180 },
-  { subject: 'DBMS', date: 'Jun 22', time: '2:00 PM', students: 165 },
-  { subject: 'Operating Systems', date: 'Jun 25', time: '9:00 AM', students: 172 },
-  { subject: 'Computer Networks', date: 'Jun 28', time: '10:30 AM', students: 155 },
-];
-
-export default function ExaminationDashboard() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 noise-overlay">
-      {/* Asymmetric stat grid */}
-      <div className="grid grid-cols-12 gap-4">
-        <StatCard
-          size="hero"
-          className="col-span-12 lg:col-span-6"
-          label={heroStat.label}
-          value={heroStat.value}
-          unit={heroStat.unit}
-          icon={heroStat.icon}
-          accentColor={MODULE_COLOR}
-          delta={heroStat.delta}
-          deltaLabel={heroStat.deltaLabel}
-          trend={heroStat.trend}
-          index={0}
-          gridColumns={12}
-        />
-        {secondaryStats.map((stat, i) => (
-          <StatCard
-            key={stat.label}
-            size="md"
-            className="col-span-12 sm:col-span-6 lg:col-span-2"
-            label={stat.label}
-            value={stat.value}
-            icon={stat.icon}
-            accentColor={MODULE_COLOR}
-            delta={stat.delta}
-            trend={stat.trend}
-            index={i + 1}
-            gridColumns={12}
-          />
-        ))}
-      </div>
+    <div className="min-h-screen flex flex-col relative noise-overlay">
+      <Background />
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <Panel
-          className="lg:col-span-3"
-          title="Semester Pass Rate Trend"
-          description="Pass rate & distinction % across 6 semesters"
-          accentColor={MODULE_COLOR}
-          index={0}
-          gridColumns={2}
-          bodyClassName="pt-2"
+      {/* Top bar — same structure as the global homepage so the
+          in-module launcher reads as part of CollegeOS, not a sub-app. */}
+      <header className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-4">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-3"
         >
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={passRateData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-                <CartesianGrid {...chartGridProps} />
-                <XAxis dataKey="semester" {...chartAxisProps} />
-                <YAxis {...chartAxisProps} domain={[0, 100]} />
-                <Tooltip content={<ChartTooltip suffix="%" />} />
-                <Line
-                  type="monotone"
-                  dataKey="passRate"
-                  name="Pass Rate"
-                  stroke="#A855F7"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={chartActiveDot}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="distinction"
-                  name="Distinction"
-                  stroke="#D8B4FE"
-                  strokeWidth={2}
-                  strokeDasharray="4 3"
-                  dot={false}
-                  activeDot={chartActiveDot}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: `${MODULE_COLOR}18` }}
+          >
+            <FileCheck className="w-4 h-4" style={{ color: MODULE_COLOR }} />
           </div>
-        </Panel>
+          <div>
+            <h1 className="text-lg font-semibold text-foreground tracking-tight font-display">
+              CollegeOS
+            </h1>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+              {MODULE_NAME} Module
+            </p>
+          </div>
+        </motion.div>
 
-        <Panel
-          className="lg:col-span-2"
-          title="Subject Averages"
-          description="Average score by subject"
-          accentColor={MODULE_COLOR}
-          index={1}
-          gridColumns={2}
-          bodyClassName="pt-2"
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-2"
         >
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={subjectPerformance} layout="vertical" margin={{ top: 8, right: 16, bottom: 0, left: 16 }}>
-                <CartesianGrid {...chartGridProps} horizontal={false} vertical={true} />
-                <XAxis type="number" {...chartAxisProps} domain={[0, 100]} />
-                <YAxis dataKey="subject" type="category" {...chartAxisProps} width={88} />
-                <Tooltip content={<ChartTooltip suffix="%" />} cursor={{ fill: 'var(--accent)', opacity: 0.3 }} />
-                <Bar dataKey="avg" name="Average" fill="#A855F7" radius={[0, 6, 6, 0]} maxBarSize={18} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Panel>
-      </div>
+          <AccentPicker />
 
-      {/* Upcoming Exams */}
-      <Panel
-        title="Upcoming Examinations"
-        description="4 exams scheduled in the next 2 weeks"
-        accentColor={MODULE_COLOR}
-        actions={
-          <button className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-0.5">
-            Schedule <ArrowRight className="w-3 h-3" />
+          <button
+            onClick={toggleCommandPalette}
+            className="glass rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Command className="w-3 h-3" />
+            <span className="hidden sm:inline">Search</span>
+            <kbd className="hidden sm:inline-flex h-4 items-center gap-0.5 rounded border border-border bg-muted px-1 text-[9px] font-medium">
+              ⌘K
+            </kbd>
           </button>
-        }
-        index={2}
-        gridColumns={1}
-        bodyClassName="pt-2"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {upcomingExams.map((exam) => (
+
+          <button
+            onClick={toggleTheme}
+            className="w-8 h-8 rounded-lg glass flex items-center justify-center hover:bg-accent transition-colors"
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+        </motion.div>
+      </header>
+
+      {/* Center content — DateTime + tile grid + status bar */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-8 px-4 pb-24">
+        <DateTime />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="w-full"
+        >
+          <SubModuleGrid
+            modules={EXAMINATION_SUBMODULES}
+            basePath="/examination"
+            parentName={MODULE_NAME}
+            parentColor={MODULE_COLOR}
+            parentIcon={FileCheck}
+            intro="Eight integrated systems covering the full examination lifecycle — from question paper generation to result redressal."
+          />
+        </motion.div>
+
+        {/* Status bar */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="flex flex-wrap items-center justify-center gap-4 mt-4"
+        >
+          {statusItems.map((item) => (
             <div
-              key={exam.subject}
-              className="rounded-lg border border-border/70 p-3 hover:border-[color:var(--panel-accent)]/40 hover:bg-accent/30 transition-all"
-              style={{ ['--panel-accent' as string]: MODULE_COLOR }}
+              key={item.label}
+              className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: MODULE_COLOR }} />
-                <span className="text-xs text-muted-foreground num-tabular">{exam.date}</span>
-              </div>
-              <p className="text-sm font-medium text-foreground">{exam.subject}</p>
-              <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1 num-tabular">
-                  <Clock className="w-3 h-3" />
-                  {exam.time}
-                </span>
-                <span className="flex items-center gap-1 num-tabular">
-                  <Users className="w-3 h-3" />
-                  {exam.students}
-                </span>
-              </div>
+              <div
+                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="num-tabular">{item.label}</span>
             </div>
           ))}
-        </div>
-      </Panel>
+        </motion.div>
+      </div>
+
+      <CommandPalette />
     </div>
   );
 }
