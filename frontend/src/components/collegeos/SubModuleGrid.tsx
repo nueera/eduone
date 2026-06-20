@@ -18,8 +18,8 @@ interface SubModuleGridProps {
   basePath: string;
   /** Parent module display name (for the header). */
   parentName: string;
-  /** Parent module accent color (hex). */
-  parentColor: string;
+  /** Parent module accent — CSS variable reference (e.g. `var(--module-examination)`). */
+  parentAccent: string;
   /** Optional parent icon component. */
   parentIcon?: React.ComponentType<{ className?: string }>;
   /** Optional intro paragraph shown under the title. */
@@ -45,7 +45,7 @@ export default function SubModuleGrid({
   modules,
   basePath,
   parentName,
-  parentColor,
+  parentAccent,
   parentIcon: ParentIcon,
   intro,
 }: SubModuleGridProps) {
@@ -72,7 +72,7 @@ export default function SubModuleGrid({
     // descendant reads from this via the global utility classes.
     <div
       className="relative z-10 flex flex-col items-center gap-6 px-4 sm:px-6 pb-24 pt-4"
-      style={{ ['--panel-accent' as string]: parentColor }}
+      style={{ ['--panel-accent' as string]: parentAccent }}
     >
       {/* Back + parent label — uses global Button (ghost variant) */}
       <motion.div

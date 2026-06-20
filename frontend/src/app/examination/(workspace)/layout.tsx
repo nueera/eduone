@@ -28,6 +28,9 @@ import { EXAMINATION_SUBMODULES } from '@/lib/examination-modules';
  * Sidebar items are derived from the central EXAMINATION_SUBMODULES
  * catalog so adding a new sub-module only needs an edit in
  * `src/lib/examination-modules.ts`.
+ *
+ * The module color is referenced via the global `--module-examination`
+ * CSS variable, not a hardcoded hex — the chrome is theme-aware for free.
  */
 
 // Map sub-module id → sidebar icon. Centralized here so the launcher
@@ -45,8 +48,8 @@ const SUBMODULE_ICONS: Record<string, LucideIcon> = {
   qpg: Wand2,
 };
 
-const MODULE_COLOR = '#A855F7';
 const MODULE_NAME = 'Examination';
+const MODULE_COLOR = 'var(--module-examination)';
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: 'overview', label: 'Module Overview', icon: LayoutGrid, path: '/examination' },

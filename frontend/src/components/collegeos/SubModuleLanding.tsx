@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, CircleDot } from 'lucide-react';
+import { ArrowLeft, CircleDot } from 'lucide-react';
 import { Panel } from '@/components/ui/panel';
 import { StatCard } from '@/components/ui/stat-card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ interface SubModuleLandingProps {
   }[];
   /** Optional feature bullets shown in the overview panel. */
   features?: string[];
-  /** Optional CTA tiles (each renders as a list row with an arrow). */
+  /** Optional CTA tiles (each renders as a clean list row). */
   actions?: {
     label: string;
     description: string;
@@ -37,17 +37,20 @@ interface SubModuleLandingProps {
  * Theming strategy
  * ----------------
  * The root container scopes a single `--panel-accent` CSS variable to
- * the sub-module's accent color. Every accent-tinted descendant reads
- * from that variable via the global utility classes defined in
- * globals.css:
+ * the sub-module's accent color (a CSS var reference like
+ * `var(--exam-accent-qpd)`). Every accent-tinted descendant reads from
+ * that variable via the global utility classes defined in globals.css:
  *
- *   .accent-chip    — icon chip background + foreground
- *   .accent-text    — text colored with the accent
- *   .accent-bullet  — small accent-colored dot for list bullets
+ *   .accent-chip     — icon chip background + foreground
+ *   .accent-text     — text colored with the accent
+ *   .accent-bullet   — small accent-colored dot for list bullets
  *   .accent-hairline — top accent line
  *
  * No inline `color-mix` calls. No hardcoded percentages. No per-page
  * styling. Tune the percentages in globals.css once, applies everywhere.
+ *
+ * Premium product vibe — no Explore label, no arrow icons on CTAs.
+ * The whole page reads as a calm, single-product overview.
  *
  * Uses the global `Button` component for the back link and CTAs so
  * focus rings, keyboard nav, and hover states match the rest of the app.
@@ -63,8 +66,8 @@ export default function SubModuleLanding({
 
   return (
     // Scope --panel-accent once at the page root. Every accent-tinted
-    // child below (icon chip, code label, bullet dots, arrow icons)
-    // reads from this via utility classes — no inline color-mix.
+    // child below (icon chip, code label, bullet dots) reads from this
+    // via utility classes — no inline color-mix.
     <div
       className="p-4 sm:p-6 lg:p-8 space-y-6 noise-overlay"
       style={{ ['--panel-accent' as string]: subModule.accent }}
@@ -184,8 +187,6 @@ export default function SubModuleLanding({
                       {action.description}
                     </p>
                   </div>
-                  {/* Arrow — global .accent-text utility */}
-                  <ArrowRight className="accent-text w-4 h-4 shrink-0 ml-2" />
                 </Button>
               ))
             ) : (

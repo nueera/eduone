@@ -33,7 +33,7 @@ export class ModuleErrorBoundary extends Component<Props, State> {
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 p-8">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor: `${this.props.moduleColor}18` }}
+            style={{ backgroundColor: `color-mix(in oklch, ${this.props.moduleColor} 14%, transparent)` }}
           >
             <span className="text-2xl" style={{ color: this.props.moduleColor }}>!</span>
           </div>
@@ -46,8 +46,8 @@ export class ModuleErrorBoundary extends Component<Props, State> {
           </p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            style={{ backgroundColor: this.props.moduleColor, color: 'white' }}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white"
+            style={{ backgroundColor: this.props.moduleColor }}
           >
             Try Again
           </button>
